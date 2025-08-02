@@ -1,6 +1,6 @@
 # Telegram Search CLI Tool 🔍
 
-A powerful command-line interface tool built with Go and Cobra for searching Telegram content on Lyzem.com. Search for channels, groups, bots, and messages with ease.
+A powerful command-line interface tool built with Go and Cobra for searching Telegram content on Lyzem.com. Search for channels, groups, bots, and messages with ease, and export results to multiple formats.
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -10,10 +10,12 @@ A powerful command-line interface tool built with Go and Cobra for searching Tel
 
 - 🔍 **Multi-type Search**: Search for channels, groups, bots, and messages
 - 📄 **Smart Pagination**: Automatic page calculation based on your limit
+- 💾 **Export Support**: Save results to JSON, CSV, or TXT formats
 - ⚡ **Fast & Efficient**: Built with Go for high performance
 - 🎯 **Flexible Limits**: Set custom result limits with auto-pagination
 - 🛠️ **Easy to Use**: Simple and intuitive command-line interface
 - 🌐 **Web Scraping**: Scrapes data from Lyzem.com search engine
+- 📁 **Auto-filenames**: Automatic timestamped filename generation
 
 ## 🚀 Installation
 
@@ -84,6 +86,13 @@ The CLI supports four types of Telegram content search:
 | `--pages` | `-p` | Auto-calculated | Number of pages to fetch |
 | `--per-page` | `-n` | 10 | Results per page |
 
+### Export Options
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--export` | `-e` | Export format: json, csv, txt |
+| `--output` | `-o` | Output filename (auto-generated if not specified) |
+
 ## 🎯 Examples
 
 ### Channel Search
@@ -97,6 +106,12 @@ telegram-search-cli search --channel "pakistan" --limit 50
 
 # Search for channels with manual pagination
 telegram-search-cli search --channel "pakistan" --pages 3 --per-page 15 --limit 45
+
+# Export channels to JSON
+telegram-search-cli search --channel "pakistan" --limit 50 --export json
+
+# Export channels to CSV with custom filename
+telegram-search-cli search --channel "pakistan" --limit 50 --export csv --output pakistan_channels.csv
 ```
 
 ### Group Search
@@ -107,6 +122,12 @@ telegram-search-cli search --group "programming"
 
 # Search for groups with high limit
 telegram-search-cli search --group "programming" --limit 100
+
+# Export groups to JSON
+telegram-search-cli search --group "programming" --limit 100 --export json
+
+# Export groups to TXT
+telegram-search-cli search --group "programming" --limit 100 --export txt
 ```
 
 ### Bot Search
@@ -117,6 +138,12 @@ telegram-search-cli search --bot "sports"
 
 # Search for bots with custom limit
 telegram-search-cli search --bot "sports" --limit 75
+
+# Export bots to CSV
+telegram-search-cli search --bot "sports" --limit 75 --export csv
+
+# Export bots to JSON with custom filename
+telegram-search-cli search --bot "sports" --limit 75 --export json --output sports_bots.json
 ```
 
 ### Message Search
@@ -127,20 +154,83 @@ telegram-search-cli search --message "pakistan"
 
 # Search for messages with high limit
 telegram-search-cli search --message "pakistan" --limit 200
+
+# Export messages to JSON
+telegram-search-cli search --message "pakistan" --limit 200 --export json
+
+# Export messages to CSV with custom filename
+telegram-search-cli search --message "pakistan" --limit 200 --export csv --output pakistan_messages.csv
 ```
 
 ### Advanced Examples
 
 ```bash
-# Search for channels with specific pagination
-telegram-search-cli search --channel "tech news" --pages 5 --per-page 20 --limit 100
+# Search for channels with specific pagination and export
+telegram-search-cli search --channel "tech news" --pages 5 --per-page 20 --limit 100 --export json
 
-# Search for groups with high results per page
-telegram-search-cli search --group "education" --per-page 25 --limit 150
+# Search for groups with high results per page and export to CSV
+telegram-search-cli search --group "education" --per-page 25 --limit 150 --export csv
 
-# Quick search for bots (auto-calculates 10 pages for 100 results)
-telegram-search-cli search --bot "music" --limit 100
+# Quick search for bots with export (auto-calculates 10 pages for 100 results)
+telegram-search-cli search --bot "music" --limit 100 --export txt
+
+# Export all search types to different formats
+telegram-search-cli search --channel "pakistan" --limit 50 --export json --output channels.json
+telegram-search-cli search --group "pakistan" --limit 50 --export csv --output groups.csv
+telegram-search-cli search --bot "pakistan" --limit 50 --export txt --output bots.txt
+telegram-search-cli search --message "pakistan" --limit 100 --export json --output messages.json
 ```
+
+## 📁 Export Formats
+
+### JSON Format
+Perfect for data processing and APIs:
+```json
+{
+  "query": "pakistan",
+  "type": "channels",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "count": 50,
+  "results": [
+    {
+      "Title": "Channel Name",
+      "URL": "https://t.me/channel",
+      "Description": "Channel description"
+    }
+  ]
+}
+```
+
+### CSV Format
+Ideal for spreadsheet applications:
+```csv
+Title,URL,Description
+Channel Name,https://t.me/channel,Channel description
+Another Channel,https://t.me/another,Another description
+```
+
+### TXT Format
+Human-readable plain text:
+```
+Search Results
+==============
+Query: pakistan
+Type: channels
+Timestamp: 2024-01-15T10:30:00Z
+
+1. Channel Name
+   URL: https://t.me/channel
+   Description: Channel description
+----------------------------------------
+```
+
+### Auto-Generated Filenames
+
+When you don't specify `--output`, the CLI automatically generates timestamped filenames:
+- `channels_pakistan_2024-01-15_10-30-05.json`
+- `groups_programming_2024-01-15_10-30-05.csv`
+- `bots_sports_2024-01-15_10-30-05.txt`
+- `messages_pakistan_2024-01-15_10-30-05.json`
 
 ## 🏗️ Project Structure
 
@@ -150,12 +240,15 @@ Telegram-Search-CLI-tool-golang-osint/
 ├── cmd/
 │   ├── root.go               # Root command configuration
 │   ├── version.go            # Version command
-│   └── search.go             # Search command with all search types
+│   └── search.go             # Search command with all search types and export
 ├── scraper/
 │   ├── channel_search.go     # Channel search functionality
 │   ├── group_search.go       # Group search functionality
 │   ├── bot_search.go         # Bot search functionality
-│   └── message_search.go     # Message search functionality
+│   ├── message_search.go     # Message search functionality
+│   └── convert.go            # Type conversion helpers for export
+├── utils/
+│   └── export.go             # Export functionality (JSON, CSV, TXT)
 ├── go.mod                    # Go module definition
 ├── go.sum                    # Dependency checksums
 ├── README.md                 # This documentation
@@ -179,7 +272,16 @@ When you specify `--limit`, the CLI automatically calculates the required pages:
 3. **Scrape Data**: Fetches results from Lyzem.com
 4. **Parse Results**: Extracts title, URL, and description
 5. **Apply Limits**: Returns results up to your specified limit
-6. **Format Output**: Displays results in a clean, readable format
+6. **Export Data**: Saves results to file if export is requested
+7. **Format Output**: Displays results in a clean, readable format
+
+### Export Process
+
+1. **Format Selection**: Choose JSON, CSV, or TXT format
+2. **Data Conversion**: Convert search results to export format
+3. **Filename Generation**: Auto-generate or use custom filename
+4. **File Creation**: Write data to file with proper formatting
+5. **Metadata Addition**: Include query, type, timestamp, and count
 
 ## 🛠️ Development
 
@@ -189,6 +291,13 @@ When you specify `--limit`, the CLI automatically calculates the required pages:
 2. Implement the search function following the existing pattern
 3. Add the flag in `cmd/search.go`
 4. Update the search logic to handle the new type
+5. Add conversion function in `scraper/convert.go`
+
+### Adding New Export Formats
+
+1. Add new format case in `utils/export.go`
+2. Implement the export function for the new format
+3. Update the format validation in `ExportToFile`
 
 ### Building from Source
 
@@ -212,6 +321,8 @@ go test ./...
 - **github.com/spf13/cobra** - CLI framework
 - **github.com/PuerkitoBio/goquery** - HTML parsing
 - **golang.org/x/net** - HTTP client utilities
+- **encoding/csv** - CSV export functionality
+- **encoding/json** - JSON export functionality
 
 ## 🤝 Contributing
 
@@ -252,6 +363,16 @@ export PATH="$PATH:$HOME/.local/bin"
 - Wait a few minutes before trying again
 - Consider reducing the number of pages
 
+**"Export error"**
+- Check if you have write permissions in the current directory
+- Ensure the export format is supported (json, csv, txt)
+- Verify the filename doesn't contain invalid characters
+
+**"Unsupported format"**
+- Supported formats: json, csv, txt
+- Use lowercase format names
+- Check the format spelling
+
 ## 📞 Support
 
 If you encounter any issues or have questions:
@@ -263,4 +384,4 @@ If you encounter any issues or have questions:
 
 ---
 
-**Happy Searching! 🔍✨** 
+**Happy Searching and Exporting! 🔍💾✨** 
