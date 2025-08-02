@@ -12,6 +12,7 @@ import (
 var (
 	channelSearchFlag bool
 	groupSearchFlag   bool
+	botSearchFlag     bool
 	limitFlag         int
 	pagesFlag         int
 	perPageFlag       int
@@ -20,9 +21,10 @@ var (
 var searchCmd = &cobra.Command{
 	Use:   "search [query]",
 	Short: "Search for content on Telegram",
-	Long: `Search for messages, channels, groups, or users on Telegram.
+	Long: `Search for messages, channels, groups, bots, or users on Telegram.
 Example: telegram-search-cli search --channel "pakistan" --limit 12
-Example: telegram-search-cli search --group "pakistan" --limit 12`,
+Example: telegram-search-cli search --group "pakistan" --limit 12
+Example: telegram-search-cli search --bot "sports" --limit 12`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
@@ -73,16 +75,37 @@ Example: telegram-search-cli search --group "pakistan" --limit 12`,
 			return
 		}
 
+		if botSearchFlag {
+			bots, err := scraper.GetBots(query, pagesFlag, perPageFlag, limitFlag)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return
+			}
+			fmt.Printf("Found %d bots for keyword '%s':\n", len(bots), query)
+			for i, bot := range bots {
+				fmt.Printf("\n%d. %s\n", i+1, bot.Title)
+				if bot.URL != "" {
+					fmt.Printf("   URL: %s\n", bot.URL)
+				}
+				if bot.Description != "" {
+					fmt.Printf("   Description: %s\n", bot.Description)
+				}
+				fmt.Println(strings.Repeat("-", 40))
+			}
+			return
+		}
+
 		fmt.Printf("Searching for: %s\n", query)
 		fmt.Println("This is a placeholder for actual Telegram search functionality.")
 		fmt.Println("In a real implementation, this would connect to Telegram API.")
-		fmt.Println("Use --channel or --group flag to search for channels or groups.")
+		fmt.Println("Use --channel, --group, or --bot flag to search for channels, groups, or bots.")
 	},
 }
 
 func init() {
 	searchCmd.Flags().BoolVarP(&channelSearchFlag, "channel", "c", false, "Search for Telegram channels")
 	searchCmd.Flags().BoolVarP(&groupSearchFlag, "group", "g", false, "Search for Telegram groups")
+	searchCmd.Flags().BoolVarP(&botSearchFlag, "bot", "b", false, "Search for Telegram bots")
 	searchCmd.Flags().IntVarP(&limitFlag, "limit", "l", 0, "Maximum number of results to return (0 = no limit)")
 	searchCmd.Flags().IntVarP(&pagesFlag, "pages", "p", 1, "Number of pages to fetch")
 	searchCmd.Flags().IntVarP(&perPageFlag, "per-page", "n", 10, "Results per page")
