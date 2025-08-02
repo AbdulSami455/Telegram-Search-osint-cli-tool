@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"telegram-search-cli/scraper"
+	"telegram-search-cli/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,8 @@ var (
 	limitFlag         int
 	pagesFlag         int
 	perPageFlag       int
+	exportFlag        string
+	outputFlag        string
 )
 
 var searchCmd = &cobra.Command{
@@ -27,7 +30,8 @@ var searchCmd = &cobra.Command{
 Example: telegram-search-cli search --channel "pakistan" --limit 12
 Example: telegram-search-cli search --group "pakistan" --limit 12
 Example: telegram-search-cli search --bot "sports" --limit 12
-Example: telegram-search-cli search --message "pakistan" --limit 100`,
+Example: telegram-search-cli search --message "pakistan" --limit 100
+Example: telegram-search-cli search --bot "sports" --limit 50 --export json --output results.json`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
@@ -56,6 +60,17 @@ Example: telegram-search-cli search --message "pakistan" --limit 100`,
 				fmt.Printf("Error: %v\n", err)
 				return
 			}
+
+			// Export if requested
+			if exportFlag != "" {
+				data := scraper.ConvertChannelsToInterface(channels)
+				if err := utils.ExportToFile(data, query, "channels", exportFlag, outputFlag); err != nil {
+					fmt.Printf("Export error: %v\n", err)
+				} else {
+					fmt.Printf("Results exported to file successfully!\n")
+				}
+			}
+
 			fmt.Printf("Found %d channels for keyword '%s':\n", len(channels), query)
 			for i, ch := range channels {
 				fmt.Printf("\n%d. %s\n", i+1, ch.Title)
@@ -76,6 +91,17 @@ Example: telegram-search-cli search --message "pakistan" --limit 100`,
 				fmt.Printf("Error: %v\n", err)
 				return
 			}
+
+			// Export if requested
+			if exportFlag != "" {
+				data := scraper.ConvertGroupsToInterface(groups)
+				if err := utils.ExportToFile(data, query, "groups", exportFlag, outputFlag); err != nil {
+					fmt.Printf("Export error: %v\n", err)
+				} else {
+					fmt.Printf("Results exported to file successfully!\n")
+				}
+			}
+
 			fmt.Printf("Found %d groups for keyword '%s':\n", len(groups), query)
 			for i, group := range groups {
 				fmt.Printf("\n%d. %s\n", i+1, group.Title)
@@ -96,6 +122,17 @@ Example: telegram-search-cli search --message "pakistan" --limit 100`,
 				fmt.Printf("Error: %v\n", err)
 				return
 			}
+
+			// Export if requested
+			if exportFlag != "" {
+				data := scraper.ConvertBotsToInterface(bots)
+				if err := utils.ExportToFile(data, query, "bots", exportFlag, outputFlag); err != nil {
+					fmt.Printf("Export error: %v\n", err)
+				} else {
+					fmt.Printf("Results exported to file successfully!\n")
+				}
+			}
+
 			fmt.Printf("Found %d bots for keyword '%s':\n", len(bots), query)
 			for i, bot := range bots {
 				fmt.Printf("\n%d. %s\n", i+1, bot.Title)
@@ -116,6 +153,17 @@ Example: telegram-search-cli search --message "pakistan" --limit 100`,
 				fmt.Printf("Error: %v\n", err)
 				return
 			}
+
+			// Export if requested
+			if exportFlag != "" {
+				data := scraper.ConvertMessagesToInterface(messages)
+				if err := utils.ExportToFile(data, query, "messages", exportFlag, outputFlag); err != nil {
+					fmt.Printf("Export error: %v\n", err)
+				} else {
+					fmt.Printf("Results exported to file successfully!\n")
+				}
+			}
+
 			fmt.Printf("Found %d messages for keyword '%s':\n", len(messages), query)
 			for i, msg := range messages {
 				fmt.Printf("\n%d. %s\n", i+1, msg.Title)
@@ -145,5 +193,7 @@ func init() {
 	searchCmd.Flags().IntVarP(&limitFlag, "limit", "l", 0, "Maximum number of results to return (0 = no limit)")
 	searchCmd.Flags().IntVarP(&pagesFlag, "pages", "p", 0, "Number of pages to fetch (auto-calculated if limit is specified)")
 	searchCmd.Flags().IntVarP(&perPageFlag, "per-page", "n", 0, "Results per page (default: 10)")
+	searchCmd.Flags().StringVarP(&exportFlag, "export", "e", "", "Export format: json, csv, txt")
+	searchCmd.Flags().StringVarP(&outputFlag, "output", "o", "", "Output filename (auto-generated if not specified)")
 	rootCmd.AddCommand(searchCmd)
 }
