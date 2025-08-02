@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"telegram-search-cli/scraper"
@@ -30,11 +31,23 @@ Example: telegram-search-cli search --message "pakistan" --limit 100`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
-		if pagesFlag <= 0 {
-			pagesFlag = 1
-		}
-		if perPageFlag <= 0 {
-			perPageFlag = 10
+
+		// Auto-calculate pages and per-page if limit is specified
+		if limitFlag > 0 {
+			if pagesFlag <= 0 {
+				pagesFlag = int(math.Ceil(float64(limitFlag) / 10.0))
+			}
+			if perPageFlag <= 0 {
+				perPageFlag = 10
+			}
+		} else {
+			// Default values if no limit specified
+			if pagesFlag <= 0 {
+				pagesFlag = 1
+			}
+			if perPageFlag <= 0 {
+				perPageFlag = 10
+			}
 		}
 
 		if channelSearchFlag {
@@ -130,7 +143,7 @@ func init() {
 	searchCmd.Flags().BoolVarP(&botSearchFlag, "bot", "b", false, "Search for Telegram bots")
 	searchCmd.Flags().BoolVarP(&messageSearchFlag, "message", "m", false, "Search for Telegram messages")
 	searchCmd.Flags().IntVarP(&limitFlag, "limit", "l", 0, "Maximum number of results to return (0 = no limit)")
-	searchCmd.Flags().IntVarP(&pagesFlag, "pages", "p", 1, "Number of pages to fetch")
-	searchCmd.Flags().IntVarP(&perPageFlag, "per-page", "n", 10, "Results per page")
+	searchCmd.Flags().IntVarP(&pagesFlag, "pages", "p", 0, "Number of pages to fetch (auto-calculated if limit is specified)")
+	searchCmd.Flags().IntVarP(&perPageFlag, "per-page", "n", 0, "Results per page (default: 10)")
 	rootCmd.AddCommand(searchCmd)
 }
