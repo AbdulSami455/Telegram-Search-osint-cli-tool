@@ -36,6 +36,13 @@ Example: telegram-search-cli search --bot "sports" --limit 50 --export json --ou
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
 
+		// Validate input
+		if strings.TrimSpace(query) == "" {
+			utils.PrintError("Search query cannot be empty")
+			utils.PrintInfo("Please provide a valid search term")
+			return
+		}
+
 		// Auto-calculate pages and per-page if limit is specified
 		if limitFlag > 0 {
 			if pagesFlag <= 0 {
@@ -54,134 +61,189 @@ Example: telegram-search-cli search --bot "sports" --limit 50 --export json --ou
 			}
 		}
 
+		// Show search configuration
+		utils.PrintInfo(fmt.Sprintf("Search configuration: %d pages, %d results per page", pagesFlag, perPageFlag))
+		if limitFlag > 0 {
+			utils.PrintInfo(fmt.Sprintf("Result limit: %d", limitFlag))
+		}
+
 		if channelSearchFlag {
+			utils.PrintHeader("Channel Search Results")
+
 			channels, err := scraper.GetChannels(query, pagesFlag, perPageFlag, limitFlag)
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				utils.HandleError(err, "search channels")
 				return
 			}
 
 			// Export if requested
 			if exportFlag != "" {
+				utils.PrintInfo("Preparing to export results...")
 				data := scraper.ConvertChannelsToInterface(channels)
 				if err := utils.ExportToFile(data, query, "channels", exportFlag, outputFlag); err != nil {
-					fmt.Printf("Export error: %v\n", err)
-				} else {
-					fmt.Printf("Results exported to file successfully!\n")
+					utils.HandleError(err, "export channels")
+					return
 				}
 			}
 
-			fmt.Printf("Found %d channels for keyword '%s':\n", len(channels), query)
+			// Display results with better formatting
+			utils.PrintSubHeader(fmt.Sprintf("Found %d channels for '%s'", len(channels), query))
+			if len(channels) == 0 {
+				utils.PrintWarning("No channels found for your search query")
+				utils.PrintInfo("Try using different keywords or check your search terms")
+				return
+			}
+
 			for i, ch := range channels {
 				fmt.Printf("\n%d. %s\n", i+1, ch.Title)
 				if ch.URL != "" {
-					fmt.Printf("   URL: %s\n", ch.URL)
+					fmt.Printf("   🔗 URL: %s\n", ch.URL)
 				}
 				if ch.Description != "" {
-					fmt.Printf("   Description: %s\n", ch.Description)
+					fmt.Printf("   📝 Description: %s\n", ch.Description)
 				}
-				fmt.Println(strings.Repeat("-", 40))
+				fmt.Println(strings.Repeat("-", 50))
 			}
+
+			utils.PrintSuccess(fmt.Sprintf("Channel search completed successfully! Found %d results", len(channels)))
 			return
 		}
 
 		if groupSearchFlag {
+			utils.PrintHeader("Group Search Results")
+
 			groups, err := scraper.GetGroups(query, pagesFlag, perPageFlag, limitFlag)
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				utils.HandleError(err, "search groups")
 				return
 			}
 
 			// Export if requested
 			if exportFlag != "" {
+				utils.PrintInfo("Preparing to export results...")
 				data := scraper.ConvertGroupsToInterface(groups)
 				if err := utils.ExportToFile(data, query, "groups", exportFlag, outputFlag); err != nil {
-					fmt.Printf("Export error: %v\n", err)
-				} else {
-					fmt.Printf("Results exported to file successfully!\n")
+					utils.HandleError(err, "export groups")
+					return
 				}
 			}
 
-			fmt.Printf("Found %d groups for keyword '%s':\n", len(groups), query)
+			// Display results with better formatting
+			utils.PrintSubHeader(fmt.Sprintf("Found %d groups for '%s'", len(groups), query))
+			if len(groups) == 0 {
+				utils.PrintWarning("No groups found for your search query")
+				utils.PrintInfo("Try using different keywords or check your search terms")
+				return
+			}
+
 			for i, group := range groups {
 				fmt.Printf("\n%d. %s\n", i+1, group.Title)
 				if group.URL != "" {
-					fmt.Printf("   URL: %s\n", group.URL)
+					fmt.Printf("   🔗 URL: %s\n", group.URL)
 				}
 				if group.Description != "" {
-					fmt.Printf("   Description: %s\n", group.Description)
+					fmt.Printf("   📝 Description: %s\n", group.Description)
 				}
-				fmt.Println(strings.Repeat("-", 40))
+				fmt.Println(strings.Repeat("-", 50))
 			}
+
+			utils.PrintSuccess(fmt.Sprintf("Group search completed successfully! Found %d results", len(groups)))
 			return
 		}
 
 		if botSearchFlag {
+			utils.PrintHeader("Bot Search Results")
+
 			bots, err := scraper.GetBots(query, pagesFlag, perPageFlag, limitFlag)
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				utils.HandleError(err, "search bots")
 				return
 			}
 
 			// Export if requested
 			if exportFlag != "" {
+				utils.PrintInfo("Preparing to export results...")
 				data := scraper.ConvertBotsToInterface(bots)
 				if err := utils.ExportToFile(data, query, "bots", exportFlag, outputFlag); err != nil {
-					fmt.Printf("Export error: %v\n", err)
-				} else {
-					fmt.Printf("Results exported to file successfully!\n")
+					utils.HandleError(err, "export bots")
+					return
 				}
 			}
 
-			fmt.Printf("Found %d bots for keyword '%s':\n", len(bots), query)
+			// Display results with better formatting
+			utils.PrintSubHeader(fmt.Sprintf("Found %d bots for '%s'", len(bots), query))
+			if len(bots) == 0 {
+				utils.PrintWarning("No bots found for your search query")
+				utils.PrintInfo("Try using different keywords or check your search terms")
+				return
+			}
+
 			for i, bot := range bots {
 				fmt.Printf("\n%d. %s\n", i+1, bot.Title)
 				if bot.URL != "" {
-					fmt.Printf("   URL: %s\n", bot.URL)
+					fmt.Printf("   🔗 URL: %s\n", bot.URL)
 				}
 				if bot.Description != "" {
-					fmt.Printf("   Description: %s\n", bot.Description)
+					fmt.Printf("   📝 Description: %s\n", bot.Description)
 				}
-				fmt.Println(strings.Repeat("-", 40))
+				fmt.Println(strings.Repeat("-", 50))
 			}
+
+			utils.PrintSuccess(fmt.Sprintf("Bot search completed successfully! Found %d results", len(bots)))
 			return
 		}
 
 		if messageSearchFlag {
+			utils.PrintHeader("Message Search Results")
+
 			messages, err := scraper.GetMessages(query, pagesFlag, perPageFlag, limitFlag)
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				utils.HandleError(err, "search messages")
 				return
 			}
 
 			// Export if requested
 			if exportFlag != "" {
+				utils.PrintInfo("Preparing to export results...")
 				data := scraper.ConvertMessagesToInterface(messages)
 				if err := utils.ExportToFile(data, query, "messages", exportFlag, outputFlag); err != nil {
-					fmt.Printf("Export error: %v\n", err)
-				} else {
-					fmt.Printf("Results exported to file successfully!\n")
+					utils.HandleError(err, "export messages")
+					return
 				}
 			}
 
-			fmt.Printf("Found %d messages for keyword '%s':\n", len(messages), query)
+			// Display results with better formatting
+			utils.PrintSubHeader(fmt.Sprintf("Found %d messages for '%s'", len(messages), query))
+			if len(messages) == 0 {
+				utils.PrintWarning("No messages found for your search query")
+				utils.PrintInfo("Try using different keywords or check your search terms")
+				return
+			}
+
 			for i, msg := range messages {
 				fmt.Printf("\n%d. %s\n", i+1, msg.Title)
 				if msg.URL != "" {
-					fmt.Printf("   URL: %s\n", msg.URL)
+					fmt.Printf("   🔗 URL: %s\n", msg.URL)
 				}
 				if msg.Description != "" {
-					fmt.Printf("   Description: %s\n", msg.Description)
+					fmt.Printf("   📝 Description: %s\n", msg.Description)
 				}
-				fmt.Println(strings.Repeat("-", 40))
+				fmt.Println(strings.Repeat("-", 50))
 			}
+
+			utils.PrintSuccess(fmt.Sprintf("Message search completed successfully! Found %d results", len(messages)))
 			return
 		}
 
-		fmt.Printf("Searching for: %s\n", query)
-		fmt.Println("This is a placeholder for actual Telegram search functionality.")
-		fmt.Println("In a real implementation, this would connect to Telegram API.")
-		fmt.Println("Use --channel, --group, --bot, or --message flag to search for channels, groups, bots, or messages.")
+		utils.PrintWarning("No search type specified")
+		utils.PrintInfo("Please specify what you want to search for:")
+		utils.PrintInfo("  --channel, -c  : Search for Telegram channels")
+		utils.PrintInfo("  --group, -g    : Search for Telegram groups")
+		utils.PrintInfo("  --bot, -b      : Search for Telegram bots")
+		utils.PrintInfo("  --message, -m  : Search for Telegram messages")
+		utils.PrintInfo("")
+		utils.PrintInfo("Example: telegram-search-cli search --channel 'pakistan' --limit 12")
+		utils.PrintInfo("Example: telegram-search-cli search --group 'technology' --export json")
 	},
 }
 
