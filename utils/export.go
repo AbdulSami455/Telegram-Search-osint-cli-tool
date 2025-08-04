@@ -20,6 +20,11 @@ type ExportData struct {
 
 // ExportToFile exports data to the specified format
 func ExportToFile(data interface{}, query, searchType, format, filename string) error {
+	// Show export progress
+	spinner := NewSpinner("Exporting results")
+	spinner.Start()
+	defer spinner.Stop()
+
 	if filename == "" {
 		// Generate default filename
 		timestamp := time.Now().Format("2006-01-02_15-04-05")
@@ -47,16 +52,24 @@ func ExportToFile(data interface{}, query, searchType, format, filename string) 
 		exportData.Count = 0
 	}
 
+	var err error
 	switch strings.ToLower(format) {
 	case "json":
-		return exportToJSON(exportData, filename)
+		err = exportToJSON(exportData, filename)
 	case "csv":
-		return exportToCSV(data, query, searchType, filename)
+		err = exportToCSV(data, query, searchType, filename)
 	case "txt":
-		return exportToTXT(data, query, searchType, filename)
+		err = exportToTXT(data, query, searchType, filename)
 	default:
-		return fmt.Errorf("unsupported format: %s", format)
+		err = fmt.Errorf("unsupported format: %s", format)
 	}
+
+	if err != nil {
+		return WrapInternalError("export data", err)
+	}
+
+	PrintSuccess(fmt.Sprintf("Results exported to '%s' successfully", filename))
+	return nil
 }
 
 // exportToJSON exports data to JSON format
